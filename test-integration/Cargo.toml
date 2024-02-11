@@ -9,9 +9,9 @@ license = "Apache-2.0 OR GPL-2.0-or-later"
 mysql = { version = "24.0.0", default-features = false }
 
 [dev-dependencies]
-regex = "1.9.5"
+regex = "1.10.3"
 lazy_static = "1.4.0"
-uuid = { version = "1.4.1", features = ["v1", "v3", "v4", "v5", "fast-rng"] }
+uuid = { version = "1.7.0", features = ["v1", "v3", "v4", "v5", "fast-rng"] }
 hex-literal = "0.4.1"
 hex = "0.4.3"
 mysql = "24.0.0"
