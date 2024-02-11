@@ -203,7 +203,7 @@ graphemes. These options may be added in the future.
 
 These algorithms are implemented by the [`rapidfuzz`] crate.
 
-[`rapidfuzz`]: https://crates.io/crates/rapidfuzz)
+[`rapidfuzz`]: https://crates.io/crates/rapidfuzz
 
 #### Usage
 
