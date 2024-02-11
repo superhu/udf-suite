@@ -6,7 +6,7 @@
 
 ### Added
 
-### Changed
+Add the `levenshtein` string distance algorithm.
 
 
 ## [0.1.10] - 2023-10-05

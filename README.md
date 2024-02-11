@@ -18,8 +18,12 @@ The following UDFs are includes:
   `xxhash`
 - [IP Functions](#ip-address-functions) for interop: `ip_validate`,
   `ip_to_canonical`, `ip_to_ipv4_mapped`
+- [String Operations](#string-operations): Calculations such as Levenshtein
+  edit distance, including limited and normalized versions.
 - [Jsonify](#jsonify): convert any data to JSON
 - [Lipsum](#lipsum): generate random text
+
+See the relevant section for more information.
 
 ### UUID
 
@@ -33,6 +37,29 @@ Provide UUID functions similar to the Postges [`uuid-osp`] package:
   rearranging options
 
 See the [UUID Readme](/udf-uuid/README.md) for more information
+
+#### Usage
+
+```text
+note: type uuid is type string
+uuid_generate_v1() -> uuid
+uuid_generate_v1mc() -> uuid
+uuid_generate_v4() -> uuid
+uuid_generate_v6([node_addr: string]) -> uuid
+uuid_generate_v7() -> uuid
+uuid_nil() -> uuid
+uuid_max() -> uuid
+uuid_ns_dns() -> string
+uuid_ns_url() -> string
+uuid_ns_oid() -> string
+uuid_ns_x500() -> string
+uuid_is_valid(uuid: uuid) -> boolean
+uuid_to_bin(uuid: uuid) -> bytes
+uuid_from_bin() -> uuid
+bin_from_uuid() -> uuid
+```
+
+#### Examples
 
 ```text
 MariaDB [(none)]> select uuid_generate_v6();
@@ -54,7 +81,7 @@ MariaDB [(none)]> select hex(uuid_to_bin(uuid_generate_v4()));
 
 [`uuid-osp`]: https://www.postgresql.org/docs/current/uuid-ossp.html
 
-## Hash Algorithms
+### Hash Algorithms
 
 This library provides the following functions:
 
@@ -68,10 +95,53 @@ This library provides the following functions:
   - `xxhash3`, `xxhash32`, `xxhash64`, `xxhash` (`xxhash` is an alias for
     `xxhash64`)
 
-All of these return hex strings by defaulti. `_bin` functions are also
+All of these return hex strings by default. `_bin` functions are also
 provided that return the binary result without going through hexification,
 suitable for storage in a `BINARY(X)` column.
 
+
+#### Usage
+
+```text
+blake2b512(a: any [, ...]) -> string
+blake2b512_bin(a: any [, ...]) -> bytes
+blake2s512(a: any [, ...]) -> string
+blake2s512_bin(a: any [, ...]) -> bytes
+blake3(a: any [, ...]) -> string
+blake3_bin(a: any [, ...]) -> bytes
+blake3_thd(a: any [, ...]) -> string
+blake3_thd_bin(a: any [, ...]) -> bytes
+md5_u(a: any [, ...]) -> string
+md5_u_bin(a: any [, ...]) -> bytes
+sha1_u(a: any [, ...]) -> string
+sha1_u_bin(a: any [, ...]) -> bytes
+sha224(a: any [, ...]) -> string
+sha224_bin(a: any [, ...]) -> bytes
+sha256(a: any [, ...]) -> string
+sha256_bin(a: any [, ...]) -> bytes
+sha384(a: any [, ...]) -> string
+sha384_bin(a: any [, ...]) -> bytes
+sha512(a: any [, ...]) -> string
+sha512_bin(a: any [, ...]) -> bytes
+keccak224(a: any [, ...]) -> string
+keccak224_bin(a: any [, ...]) -> bytes
+keccak256(a: any [, ...]) -> string
+keccak256_bin(a: any [, ...]) -> bytes
+sha3_224(a: any [, ...]) -> string
+sha3_224_bin(a: any [, ...]) -> bytes
+sha3_256(a: any [, ...]) -> string
+sha3_256_bin(a: any [, ...]) -> bytes
+sha3_384(a: any [, ...]) -> string
+sha3_384_bin(a: any [, ...]) -> bytes
+sha3_512(a: any [, ...]) -> string
+sha3_512_bin(a: any [, ...]) -> bytes
+xxhash(a: any [, ...]) -> integer
+xxhash3(a: any [, ...]) -> integer
+xxhash32(a: any [, ...]) -> integer
+xxhash64(a: any [, ...]) -> integer
+```
+
+#### Examples
 
 ```text
 MariaDB [(none)]> select blake3("Hello, world!");
@@ -114,14 +184,66 @@ MariaDB [(none)]> select xxhash('Hello, ', 0x77, 'orld', '!');
 
 Note that in SQL, all integers are an `i64`, all floats are a `f64`, and all
 decimals are represented as a string to the UDF API. This library hashes these
-types as their little endian representation. (You only need to worry about this
-if you have very obscure platform compatibility requirements, and strings and
-blobs are always unambiguous).
+types as their little endian representation on all platforms. (You only need
+to worry about this if you have very obscure platform compatibility
+requirements. Strings and blobs are always unambiguous).
+
+### String Operationg
+
+Provide the function `levenshtein`, which calculates the levenshtein edit
+distance between two strings. There is also `levenshtein_normalized` that
+returns a value between 0.0 (identical) and 1.0 (significantly different).
+
+If a limit is provided as a third argument, the operation will terminate if
+that limit is exceeded. This can help to improve performance if filtering
+dissimilar strings.
+
+These algorithms provide a _byte_ edit distance, rather than unicode chars or
+graphemes. These options may be added in the future.
+
+These algorithms are implemented by the [`rapidfuzz`] crate.
+
+[`rapidfuzz`]: https://crates.io/crates/rapidfuzz)
+
+#### Usage
+
+```text
+levenshtein(a: str, b: str [, limit: integer]) -> integer;
+levenshtein_normalized(a: str, b: str [, limit: real]) -> real;
+```
+
+#### Example
+
+```text
+MariaDB [(none)]> SELECT levenshtein('foo', 'moose'), levenshtein_normalized('foo', 'moos');
++-----------------------------+---------------------------------------+
+| levenshtein('foo', 'moose') | levenshtein_normalized('foo', 'moos') |
++-----------------------------+---------------------------------------+
+|                           3 |                                   0.5 |
++-----------------------------+---------------------------------------+
+1 row in set (0.001 sec)
+
+MariaDB [(none)]> SELECT levenshtein('foo', 'moose', 2), levenshtein_normalized('foo', 'moos', 0.3);
++--------------------------------+--------------------------------------------+
+| levenshtein('foo', 'moose', 2) | levenshtein_normalized('foo', 'moos', 0.3) |
++--------------------------------+--------------------------------------------+
+|                              2 |                                        0.3 |
++--------------------------------+--------------------------------------------+
+1 row in set (0.001 sec)
+```
 
 ### Jsonify
 
 Provide the function `jsonify`, which quickly creates JSON output for any given
 inputs.
+
+#### Usage
+
+```text
+jsonify(a: any [, ...]) -> string
+```
+
+#### Examples
 
 ```text
 MariaDB [db]> select jsonify(qty, cost, class) from t1 limit 4;
@@ -155,6 +277,14 @@ MariaDB [db]> select jsonify(uuid() as uuid, qty as quantity, cost) from t1 limi
 
 Uses the [lipsum crate] to generate lipsum strings with a specified word count.
 
+#### Usage
+
+```text
+lipsum(count: integer [, seed: integer]) -> string
+```
+
+#### Examples
+
 
 ```text
 MariaDB [(none)]> select lipsum(10);
@@ -168,7 +298,7 @@ MariaDB [(none)]> select lipsum(10);
 
 [lipsum crate]: https://docs.rs/lipsum/latest/lipsum/
 
-## IP Address Functions
+### IP Address Functions
 
 We provide three IP functions:
 
@@ -177,7 +307,18 @@ We provide three IP functions:
 - `ip_to_ipv6_mapped` which converts ipv4 addresses to their ipv6 form (e.g.
   for interop with the `INET6` data type)
 - `ip_to_canonical` which reverses the mapping operation
+
+#### Usage
+
+```text
+ip_validate(ip: string) -> string
+ip_to_canonical(ip: string) -> string
+ip_to_ipv6_mapped(ip: string) -> string
 ```
+
+#### Examples
+
+```text
 MariaDB [db]> select
     ->     input,
     ->     ip_validate(input),
@@ -205,11 +346,12 @@ The desired files can be copied to the plugin directory (usually
 `/usr/lib/mysql/plugin`) and selectively loaded:
 
 ```sql
+-- **** Hash functions ****
 CREATE OR REPLACE FUNCTION blake2b512 RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION blake2s256 RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION blake3 RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION blake3_thd RETURNS string SONAME 'libudf_hash.so';
--- the md5 and sha functions have builtin versions
+-- the md5 and sha functions have builtin versions, hence the `_u` suffix
 CREATE OR REPLACE FUNCTION md5_u RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION sha1_u RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION sha224 RETURNS string SONAME 'libudf_hash.so';
@@ -221,7 +363,6 @@ CREATE OR REPLACE FUNCTION keccak256 RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION sha3_224 RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION sha3_256 RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION sha3_384 RETURNS string SONAME 'libudf_hash.so';
-CREATE OR REPLACE FUNCTION sha3_384_bin RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION sha3_512 RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION xxhash RETURNS integer SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION xxhash3 RETURNS integer SONAME 'libudf_hash.so';
@@ -245,36 +386,41 @@ CREATE OR REPLACE FUNCTION keccak224_bin RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION keccak256_bin RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION sha3_224_bin RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION sha3_256_bin RETURNS string SONAME 'libudf_hash.so';
+CREATE OR REPLACE FUNCTION sha3_384_bin RETURNS string SONAME 'libudf_hash.so';
 CREATE OR REPLACE FUNCTION sha3_512_bin RETURNS string SONAME 'libudf_hash.so';
 
--- JSON creation function
-CREATE FUNCTION jsonify RETURNS string SONAME 'libudf_jsonify.so';
+-- **** JSON creation function ****
+CREATE OR REPLACE FUNCTION jsonify RETURNS string SONAME 'libudf_jsonify.so';
 
--- IP functions
-CREATE FUNCTION ip_validate RETURNS string SONAME 'libudf_net.so';
-CREATE FUNCTION ip_to_canonical RETURNS string SONAME 'libudf_net.so';
-CREATE FUNCTION ip_to_ipv6_mapped RETURNS string SONAME 'libudf_net.so';
+-- **** IP functions ****
+CREATE OR REPLACE FUNCTION ip_validate RETURNS string SONAME 'libudf_net.so';
+CREATE OR REPLACE FUNCTION ip_to_canonical RETURNS string SONAME 'libudf_net.so';
+CREATE OR REPLACE FUNCTION ip_to_ipv6_mapped RETURNS string SONAME 'libudf_net.so';
 
--- random string generation
-CREATE FUNCTION lipsum RETURNS string SONAME 'libudf_lipsum.so';
+-- **** string operation functions ****
+CREATE OR REPLACE FUNCTION levenshtein RETURNS integer SONAME 'libudf_stringops.so'
+CREATE OR REPLACE FUNCTION levenshtein_normalized RETURNS real SONAME 'libudf_stringops.so'
 
--- UUID interfaces
-CREATE FUNCTION uuid_generate_v1 RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_generate_v1mc RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_generate_v4 RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_generate_v6 RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_generate_v7 RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_nil RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_max RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_ns_dns RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_ns_url RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_ns_oid RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_ns_x500 RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_is_valid RETURNS integer SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_to_bin RETURNS string SONAME 'libudf_uuid.so';
-CREATE FUNCTION uuid_from_bin RETURNS string SONAME 'libudf_uuid.so';
+-- **** random string generation ****
+CREATE OR REPLACE FUNCTION lipsum RETURNS string SONAME 'libudf_lipsum.so';
+
+-- **** UUID interfaces ****
+CREATE OR REPLACE FUNCTION uuid_generate_v1 RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_generate_v1mc RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_generate_v4 RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_generate_v6 RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_generate_v7 RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_nil RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_max RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_ns_dns RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_ns_url RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_ns_oid RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_ns_x500 RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_is_valid RETURNS integer SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_to_bin RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION uuid_from_bin RETURNS string SONAME 'libudf_uuid.so';
 -- `bin_to_uuid` and 'uuid_from_bin' are aliases
-CREATE FUNCTION bin_to_uuid RETURNS string SONAME 'libudf_uuid.so';
+CREATE OR REPLACE FUNCTION bin_to_uuid RETURNS string SONAME 'libudf_uuid.so';
 ```
 
 Note that Windows `.dll`s are built but have not been tested - please open an
@@ -305,14 +451,14 @@ docker build . --tag mdb-udf-suite-img
 # run it in the background
 docker run --rm -d \
   -e MARIADB_ROOT_PASSWORD=example \
-  --name mdb_udf_suite \
+  --name mdb-udf-suite \
   mdb-udf-suite-img
 
 # Enter a SQL shell
-docker exec -it mdb_udf_suite mariadb -pexample
+docker exec -it mdb-udf-suite mariadb -pexample
 
 # Stop the server when done
-docker stop mdb_udf_suite
+docker stop mdb-udf-suite
 ```
 
 The UDFs can then be loaded using the `CREATE FUNCTION` statements above.

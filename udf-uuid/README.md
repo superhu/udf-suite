@@ -111,7 +111,7 @@ SELECT uuid_generate_v6();
 SELECT uuid_generate_v6('123abc');
 SELECT uuid_generate_v7();
 
--- UUID constants
+-- UUID constants and namespaces
 SELECT uuid_nil();
 SELECT uuid_max();
 SELECT uuid_ns_dns();
