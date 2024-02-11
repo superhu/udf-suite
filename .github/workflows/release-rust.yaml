@@ -9,7 +9,7 @@ on:
     - 'v*'
 
 env:
-  RUSTFLAGS: "-D warnings --cfg uuid_unstable"
+  RUSTFLAGS: "-D warnings"
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
 jobs:
