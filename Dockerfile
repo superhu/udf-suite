@@ -9,9 +9,7 @@
 # docker exec -it mdb-udf-suite-c mariadb -pexample
 # ```
 
-FROM rust:latest AS build
-
-ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+FROM rust:1.76 AS build
 
 WORKDIR /build
 

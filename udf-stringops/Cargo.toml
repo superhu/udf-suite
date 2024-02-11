@@ -1,0 +1,13 @@
+[package]
+name = "udf-stringops"
+version = "0.1.10"
+edition = "2021"
+publish = false
+license = "Apache-2.0 OR GPL-2.0-or-later"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+rapidfuzz = "0.5.0"
+udf = { version = "0.5.4", features = ["mock"] }
