@@ -188,7 +188,7 @@ types as their little endian representation on all platforms. (You only need
 to worry about this if you have very obscure platform compatibility
 requirements. Strings and blobs are always unambiguous).
 
-### String Operationg
+### String Operations
 
 Provide the function `levenshtein`, which calculates the levenshtein edit
 distance between two strings. There is also `levenshtein_normalized` that
