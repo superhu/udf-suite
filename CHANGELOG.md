@@ -6,7 +6,17 @@
 
 ### Added
 
-Add the `levenshtein` string distance algorithm.
+### Changed
+
+
+## [0.2.0] - 2024-02-10
+
+From this release forward, adding a new function will be considered a minor
+release. This should be more semver-accurate.
+
+### Added
+
+Add the `levenshtein` and `levenshtein_normalized` string distance algorithms.
 
 
 ## [0.1.10] - 2023-10-05
@@ -111,7 +121,8 @@ Changed licensing from 'Apache-2.0' to 'Apache-2.0 OR GPL-2.0-or-later'
 
 <!-- next-url -->
 
-[Unreleased]: https://github.com/pluots/udf-suite/compare/v0.1.10...HEAD
+[Unreleased]: https://github.com/pluots/udf-suite/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/pluots/udf-suite/compare/v0.1.10...v0.2.0
 [0.1.10]: https://github.com/pluots/udf-suite/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/pluots/udf-suite/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/pluots/udf-suite/compare/v0.1.7...v0.1.8
