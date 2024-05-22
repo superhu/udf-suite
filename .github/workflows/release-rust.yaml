@@ -109,7 +109,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         env:
-          GITHUB_REPOSITORY: pluots/udf-suite
+          GITHUB_REPOSITORY: superhu/udf-suite
         with:
           body_path: RNOTES.md
           # note you'll typically need to create a personal access token
