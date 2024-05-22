@@ -4,9 +4,9 @@ name: "Rust Build & Release"
 # This configuration largely comes from ripgrep
 
 on:
-  push:
-    tags:
-    - 'v*'
+  label:
+    types:
+      - created
 
 env:
   RUSTFLAGS: "-D warnings"
